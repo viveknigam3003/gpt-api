@@ -155,17 +155,18 @@ function App() {
           withCloseButton={false}
           centered
           withOverlay
-          overlayProps={{ blur: 15 }}
+          overlayProps={{ blur: 5 }}
           radius={"md"}
           style={{
             backgroundColor: dark ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)",
           }}
+          shadow="xl"
         >
           <Center>
             <Stack spacing={"xl"} align="center">
               <Stack spacing={4} align="center">
                 <Title order={3}>Layered GPT</Title>
-                <Text size={14} color="gray">
+                <Text size={14} color={dark ? "violet": "gray"}>
                   Context layers based Chat GPT
                 </Text>
               </Stack>
