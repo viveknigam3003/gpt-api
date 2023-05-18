@@ -26,8 +26,7 @@ import {
 } from "@mantine/core";
 import {
   getHotkeyHandler,
-  useDisclosure,
-  useLocalStorage,
+  useLocalStorage
 } from "@mantine/hooks";
 import {
   IconBoxMultiple,
@@ -44,35 +43,32 @@ import {
 import { CreateChatCompletionRequest } from "openai";
 import { useState } from "react";
 import { openai } from "./modules/openai";
-import { useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import { RichTextEditor } from "@mantine/tiptap";
 
 interface PromptLayer {
   name: string;
   prompt: string;
 }
 
-const DisplayText = ({ text }: { text: string }) => {
-  const editor = useEditor({
-    editable: false,
-    extensions: [StarterKit, ],
-    content: text,
-    editorProps: {
+// const DisplayText = ({ text }: { text: string }) => {
+//   const editor = useEditor({
+//     editable: false,
+//     extensions: [StarterKit, ],
+//     content: text,
+//     editorProps: {
       
-    }
-  });
+//     }
+//   });
 
-  return (
-    <RichTextEditor editor={editor}>
-      <RichTextEditor.Content style={{whiteSpace: 'pre-wrap'}}/>
-    </RichTextEditor>
-  );
-};
+//   return (
+//     <RichTextEditor editor={editor}>
+//       <RichTextEditor.Content style={{whiteSpace: 'pre-wrap'}}/>
+//     </RichTextEditor>
+//   );
+// };
 
 function App() {
   const { classes } = useStyles();
-  const [opened, { open, close }] = useDisclosure(false);
+  // const [opened, { open, close }] = useDisclosure(false);
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === "dark";
   const { loginWithRedirect, isLoading, logout, user } = useAuth0();
@@ -164,7 +160,9 @@ function App() {
         <Modal
           opened={true}
           closeOnEscape={false}
-          onClose={close}
+          onClose={() => {
+            // do nothing
+          }}
           withCloseButton={false}
           centered
           withOverlay
