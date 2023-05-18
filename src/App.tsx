@@ -7,11 +7,11 @@ import {
   Avatar,
   Box,
   Button,
-  Card,
   Center,
   Divider,
   Flex,
   Group,
+  Loader,
   Modal,
   Navbar,
   NumberInput,
@@ -39,15 +39,36 @@ import {
   IconSend,
   IconSettings,
   IconSun,
+  IconTrash,
 } from "@tabler/icons-react";
 import { CreateChatCompletionRequest } from "openai";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { openai } from "./modules/openai";
+import { useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { RichTextEditor } from "@mantine/tiptap";
 
 interface PromptLayer {
   name: string;
   prompt: string;
 }
+
+const DisplayText = ({ text }: { text: string }) => {
+  const editor = useEditor({
+    editable: false,
+    extensions: [StarterKit, ],
+    content: text,
+    editorProps: {
+      
+    }
+  });
+
+  return (
+    <RichTextEditor editor={editor}>
+      <RichTextEditor.Content style={{whiteSpace: 'pre-wrap'}}/>
+    </RichTextEditor>
+  );
+};
 
 function App() {
   const { classes } = useStyles();
@@ -57,9 +78,12 @@ function App() {
   const { loginWithRedirect, isLoading, logout, user } = useAuth0();
   const [currentMessage, setCurrentMessage] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [messages, setMessages] = useState<
+  const [messages, setMessages] = useLocalStorage<
     CreateChatCompletionRequest["messages"]
-  >([]);
+  >({
+    key: "messages",
+    defaultValue: [],
+  });
 
   const [config, setConfig] = useState<
     Omit<CreateChatCompletionRequest, "messages">
@@ -77,9 +101,12 @@ function App() {
     setMessages((prev) => [...prev, { role: "user", content: message }]);
   };
 
-  const sendChat = async () => {
+  const sendChat = async (
+    messages: CreateChatCompletionRequest["messages"]
+  ) => {
     setIsTyping(true);
     try {
+      console.log("messages", messages);
       const response = await openai.createChatCompletion({
         ...config,
         messages: messages,
@@ -109,17 +136,26 @@ function App() {
     // Make the added prompts in numbered list
     const prompt = promptLayers.reduce((acc, layer, index) => {
       return `${acc}${index + 1}. ${layer.prompt}\n`;
-    }, `${currentMessage} \n\nPlease also follow the following instructions before giving the final answer: \n\n`);
+    }, `${currentPrompt} \n\nPlease also follow the following instructions before giving the final answer: \n\n`);
 
     return prompt;
   };
 
   const handleSubmission = async () => {
-    addMessage(currentMessage);
     setCurrentMessage("");
+    addMessage(currentMessage);
     const newPrompt = buildPrompt(currentMessage);
-    console.log(newPrompt);
-    // await sendChat();
+
+    const newMessage = {
+      role: "user" as CreateChatCompletionRequest["messages"][0]["role"],
+      content: newPrompt,
+    };
+    const newMessages: CreateChatCompletionRequest["messages"] = [
+      ...messages,
+      newMessage,
+    ];
+
+    await sendChat(newMessages);
   };
 
   if (!user) {
@@ -151,7 +187,7 @@ function App() {
                 leftIcon={<IconLock stroke={2} size={14} />}
                 loading={isLoading}
               >
-                Login to continue
+                {isLoading ? "Loading..." : "Login to continue"}
               </Button>
             </Stack>
           </Center>
@@ -215,7 +251,7 @@ function App() {
         </Navbar>
       }
       aside={
-        <Aside width={{ base: 300 }}>
+        <Aside width={{ base: 300 }} style={{ overflow: "scroll" }}>
           <Stack spacing={"xl"} align="left" p={"md"}>
             <Group spacing={4}>
               <IconSettings size={16} />
@@ -254,6 +290,14 @@ function App() {
                 )
               }
             />
+            <Button
+              variant="outline"
+              onClick={() => {
+                setMessages([]);
+              }}
+            >
+              Clear chat
+            </Button>
             <Divider />
           </Stack>
           <Stack spacing={"xl"} align="left" p={"md"}>
@@ -271,12 +315,10 @@ function App() {
             >
               Add layer
             </Button>
+
             <Accordion variant="separated">
               {promptLayers.map((layer, index) => (
-                <Accordion.Item
-                  key={`${layer.name}-${index}`}
-                  value={`${index}`}
-                >
+                <Accordion.Item key={`${index}`} value={`${index}`}>
                   <Accordion.Control>
                     <Text>{layer.name}</Text>
                   </Accordion.Control>
@@ -304,6 +346,19 @@ function App() {
                           setPromptLayers(newLayers);
                         }}
                       />
+                      <Button
+                        variant="outline"
+                        fullWidth
+                        color="red"
+                        leftIcon={<IconTrash stroke={2} size={14} />}
+                        onClick={() => {
+                          const newLayers = [...promptLayers];
+                          newLayers.splice(index, 1);
+                          setPromptLayers(newLayers);
+                        }}
+                      >
+                        Remove layer
+                      </Button>
                     </Stack>
                   </Accordion.Panel>
                 </Accordion.Item>
@@ -327,11 +382,14 @@ function App() {
                   radius={"md"}
                   size={"sm"}
                 />
-                <Text>{message.content}</Text>
+                <Text style={{ whiteSpace: "pre-wrap" }}>
+                  {message.content}{" "}
+                </Text>
               </Flex>
               <Divider opacity={0.5} />
             </Stack>
           ))}
+          {isTyping && <Loader variant="dots" size="sm" />}
         </Stack>
         <Textarea
           onKeyDown={getHotkeyHandler([["mod + enter", handleSubmission]])}

@@ -9,6 +9,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { Notifications } from "@mantine/notifications";
 
 const Root: React.FC = () => {
   const preferredColorScheme = useColorScheme();
@@ -30,6 +31,7 @@ const Root: React.FC = () => {
         withGlobalStyles
         withNormalizeCSS
       >
+        <Notifications />
         <App />
       </MantineProvider>
     </ColorSchemeProvider>
