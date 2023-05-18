@@ -165,7 +165,7 @@ function App() {
           <Center>
             <Stack spacing={"xl"} align="center">
               <Stack spacing={4} align="center">
-                <Title order={3}>Layered GPT</Title>
+                <Title order={3}>Layers GPT</Title>
                 <Text size={14} color={dark ? "violet": "gray"}>
                   Context layers based Chat GPT
                 </Text>
