@@ -24,10 +24,7 @@ import {
   createStyles,
   useMantineColorScheme,
 } from "@mantine/core";
-import {
-  getHotkeyHandler,
-  useLocalStorage
-} from "@mantine/hooks";
+import { getHotkeyHandler, useHotkeys, useLocalStorage } from "@mantine/hooks";
 import {
   IconBoxMultiple,
   IconFlame,
@@ -55,7 +52,7 @@ interface PromptLayer {
 //     extensions: [StarterKit, ],
 //     content: text,
 //     editorProps: {
-      
+
 //     }
 //   });
 
@@ -69,6 +66,7 @@ interface PromptLayer {
 function App() {
   const { classes } = useStyles();
   // const [opened, { open, close }] = useDisclosure(false);
+  const [showControls, setShowControls] = useState<boolean>(false);
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === "dark";
   const { loginWithRedirect, isLoading, logout, user } = useAuth0();
@@ -92,6 +90,8 @@ function App() {
     key: "promptLayers",
     defaultValue: [],
   });
+
+  useHotkeys([["mod+shift+C", () => setShowControls((c) => !c)]]);
 
   const addMessage = (message: string) => {
     setMessages((prev) => [...prev, { role: "user", content: message }]);
@@ -132,7 +132,7 @@ function App() {
     // Make the added prompts in numbered list
     const prompt = promptLayers.reduce((acc, layer, index) => {
       return `${acc}${index + 1}. ${layer.prompt}\n`;
-    }, `${currentPrompt} \n\nPlease also follow the following instructions before giving the final answer: \n\n`);
+    }, `${currentPrompt} \n\nPlease also follow the following instructions before giving the final answer. Give one final answer which complies with all of the above instructions: \n\n`);
 
     return prompt;
   };
@@ -196,6 +196,7 @@ function App() {
 
   return (
     <AppShell
+      hidden={showControls}
       classNames={{ main: classes.rootContainer }}
       navbar={
         <Navbar width={{ base: 300 }} className={classes.navbar}>
@@ -387,7 +388,19 @@ function App() {
               <Divider opacity={0.5} />
             </Stack>
           ))}
-          {isTyping && <Loader variant="dots" size="sm" />}
+          {isTyping && (
+            <Group spacing={8}>
+              <Loader variant="dots" size="sm" />
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontStyle: "italic",
+                }}
+              >
+                Typing...
+              </Text>
+            </Group>
+          )}
         </Stack>
         <Textarea
           onKeyDown={getHotkeyHandler([["mod + enter", handleSubmission]])}
