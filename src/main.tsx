@@ -31,7 +31,7 @@ const Root: React.FC = () => {
         withGlobalStyles
         withNormalizeCSS
       >
-        <Notifications />
+        <Notifications position="bottom-center"/>
         <App />
       </MantineProvider>
     </ColorSchemeProvider>

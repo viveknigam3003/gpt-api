@@ -25,6 +25,7 @@ import {
   useMantineColorScheme,
 } from "@mantine/core";
 import { getHotkeyHandler, useHotkeys, useLocalStorage } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconBoxMultiple,
   IconFlame,
@@ -46,30 +47,12 @@ interface PromptLayer {
   prompt: string;
 }
 
-// const DisplayText = ({ text }: { text: string }) => {
-//   const editor = useEditor({
-//     editable: false,
-//     extensions: [StarterKit, ],
-//     content: text,
-//     editorProps: {
-
-//     }
-//   });
-
-//   return (
-//     <RichTextEditor editor={editor}>
-//       <RichTextEditor.Content style={{whiteSpace: 'pre-wrap'}}/>
-//     </RichTextEditor>
-//   );
-// };
-
 function App() {
   const { classes } = useStyles();
-  // const [opened, { open, close }] = useDisclosure(false);
   const [showControls, setShowControls] = useState<boolean>(false);
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === "dark";
-  const { loginWithRedirect, isLoading, logout, user } = useAuth0();
+  const { loginWithRedirect, isLoading, logout, user, error } = useAuth0();
   const [currentMessage, setCurrentMessage] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [messages, setMessages] = useLocalStorage<
@@ -102,10 +85,10 @@ function App() {
   ) => {
     setIsTyping(true);
     try {
-      console.log("messages", messages);
       const response = await openai.createChatCompletion({
         ...config,
         messages: messages,
+        user: user?.email || "",
       });
 
       const choices = response.data.choices;
@@ -119,8 +102,14 @@ function App() {
       if (newMessage.content) {
         setMessages((prev) => [...prev, newMessage]);
       }
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      notifications.show({
+        title: "An error occured while processing the message",
+        message: "Please try again, it might be a temporary issue",
+        color: "red",
+        autoClose: 5000,
+      });
+      console.log(error.response.data);
     } finally {
       setIsTyping(false);
     }
@@ -175,7 +164,7 @@ function App() {
           <Center>
             <Stack spacing={"xl"} align="center">
               <Stack spacing={4} align="center">
-                <Title order={3}>GPT-API</Title>
+                <Title order={3}>Layered GPT</Title>
                 <Text size={14} color="gray">
                   Context layers based Chat GPT
                 </Text>
@@ -192,6 +181,15 @@ function App() {
         </Modal>
       </Box>
     );
+  }
+
+  if (error) {
+    notifications.show({
+      title: "Error loggin you in",
+      message: "Please contact the admin for resolving this issue",
+      color: "red",
+      autoClose: false,
+    });
   }
 
   return (
