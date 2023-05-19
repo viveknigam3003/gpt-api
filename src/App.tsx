@@ -528,7 +528,7 @@ function App() {
 
 export default App;
 
-const useStyles = createStyles((theme) => ({
+const useStyles = createStyles({
   loginRoot: {
     background: 'url("/bg.jpg") no-repeat center center fixed',
     backgroundSize: "cover",
@@ -576,4 +576,4 @@ const useStyles = createStyles((theme) => ({
     padding: 8,
     borderRadius: 8,
   },
-}));
+});
