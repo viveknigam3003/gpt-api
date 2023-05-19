@@ -27,11 +27,15 @@ import {
 import { getHotkeyHandler, useHotkeys, useLocalStorage } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
+  IconArrowRight,
   IconBoxMultiple,
+  IconClearAll,
+  IconDeviceFloppy,
   IconFlame,
   IconFlameOff,
   IconLock,
   IconMoonStars,
+  IconPackages,
   IconPlus,
   IconSend,
   IconSettings,
@@ -43,9 +47,20 @@ import { useState } from "react";
 import { openai } from "./modules/openai";
 
 interface PromptLayer {
+  id: string;
   name: string;
   prompt: string;
 }
+
+interface SavedGroup {
+  id: string;
+  name: string;
+  layers: Array<PromptLayer>;
+}
+
+const getUUID = () => {
+  return Math.random().toString(36).substring(2, 9);
+};
 
 function App() {
   const { classes } = useStyles();
@@ -73,6 +88,14 @@ function App() {
     key: "promptLayers",
     defaultValue: [],
   });
+
+  const [savedGroups, setSavedGroups] = useLocalStorage<Array<SavedGroup>>({
+    key: "savedGroups",
+    defaultValue: [],
+  });
+
+  const [currentEditingGroup, setCurrentEditingGroup] =
+    useState<SavedGroup | null>(null);
 
   useHotkeys([["mod+shift+C", () => setShowControls((c) => !c)]]);
 
@@ -143,6 +166,16 @@ function App() {
     await sendChat(newMessages);
   };
 
+  const handleLayerGroupSave = () => {
+    const newGroup = {
+      id: getUUID(),
+      name: "New Group",
+      layers: promptLayers,
+    };
+
+    setSavedGroups((prev) => [...prev, newGroup]);
+  };
+
   if (!user) {
     return (
       <Box className={classes.loginRoot}>
@@ -166,7 +199,7 @@ function App() {
             <Stack spacing={"xl"} align="center">
               <Stack spacing={4} align="center">
                 <Title order={3}>Layers GPT</Title>
-                <Text size={14} color={dark ? "violet": "gray"}>
+                <Text size={14} color={dark ? "violet" : "gray"}>
                   Context layers based Chat GPT
                 </Text>
               </Stack>
@@ -207,14 +240,58 @@ function App() {
             justify={"space-between"}
           >
             <Stack w={"100%"}>
-              <Button
-                variant="outline"
-                fullWidth
-                leftIcon={<IconPlus stroke={2} size={14} />}
-                disabled
-              >
-                New Chat
-              </Button>
+              <Group spacing={4}>
+                <IconPackages size={16} />
+                <Title order={4}>Layer groups</Title>
+              </Group>
+              <Stack spacing={4}>
+                {savedGroups.map((group, index) => (
+                  <Box key={index} className={classes.savedGroup}>
+                    <Group spacing={4} position="apart">
+                      {currentEditingGroup?.id === group.id ? (
+                        <TextInput
+                          value={currentEditingGroup.name}
+                          onChange={(e) => {
+                            const newName = e.target.value;
+                            setCurrentEditingGroup((prev) => {
+                              if (prev) {
+                                return { ...prev, name: newName };
+                              }
+                              return prev;
+                            });
+                          }}
+                          onBlur={() => {
+                            // Update the group name in the saved groups
+                            const newSavedGroups = savedGroups.map((g) => {
+                              if (g.id === group.id) {
+                                return currentEditingGroup;
+                              }
+                              return g;
+                            });
+                            setSavedGroups(newSavedGroups);
+                            setCurrentEditingGroup(null);
+                          }}
+                        />
+                      ) : (
+                        <Text
+                          onDoubleClick={() => setCurrentEditingGroup(group)}
+                        >
+                          {group.name}
+                        </Text>
+                      )}
+                      <Button
+                        className="load-group"
+                        variant="subtle"
+                        onClick={() => {
+                          setPromptLayers(group.layers);
+                        }}
+                      >
+                        <IconArrowRight size={16} />
+                      </Button>
+                    </Group>
+                  </Box>
+                ))}
+              </Stack>
             </Stack>
             <Stack w={"100%"} spacing={4}>
               <Button
@@ -298,21 +375,46 @@ function App() {
             </Button>
             <Divider />
           </Stack>
-          <Stack spacing={"xl"} align="left" p={"md"}>
-            <Group spacing={4}>
-              <IconBoxMultiple size={16} />
-              <Title order={4}>Layers</Title>
+          <Stack spacing={"xl"} p={"md"}>
+            <Group spacing={4} position="apart">
+              <Group spacing={4}>
+                <IconBoxMultiple size={16} />
+                <Title order={4}>Layers</Title>
+              </Group>
+              <Button
+                size="xs"
+                variant="subtle"
+                leftIcon={<IconDeviceFloppy stroke={2} size={14} />}
+                onClick={handleLayerGroupSave}
+              >
+                Save layer group
+              </Button>
             </Group>
-            <Button
-              variant="outline"
-              fullWidth
-              leftIcon={<IconPlus stroke={2} size={14} />}
-              onClick={() =>
-                setPromptLayers((prev) => [...prev, { name: "", prompt: "" }])
-              }
-            >
-              Add layer
-            </Button>
+            <Group position="apart" grow>
+              <Button
+                size="xs"
+                variant="outline"
+                leftIcon={<IconPlus stroke={2} size={14} />}
+                onClick={() =>
+                  setPromptLayers((prev) => [
+                    ...prev,
+                    { id: getUUID(), name: "", prompt: "" },
+                  ])
+                }
+              >
+                Add new
+              </Button>
+              <Button
+                size="xs"
+                variant="outline"
+                leftIcon={<IconClearAll stroke={2} size={14} />}
+                onClick={() => {
+                  setPromptLayers([]);
+                }}
+              >
+                Clear layers
+              </Button>
+            </Group>
 
             <Accordion variant="separated">
               {promptLayers.map((layer, index) => (
@@ -426,7 +528,7 @@ function App() {
 
 export default App;
 
-const useStyles = createStyles({
+const useStyles = createStyles((theme) => ({
   loginRoot: {
     background: 'url("/bg.jpg") no-repeat center center fixed',
     backgroundSize: "cover",
@@ -470,4 +572,8 @@ const useStyles = createStyles({
     overflowY: "scroll",
     height: "90vh",
   },
-});
+  savedGroup: {
+    padding: 8,
+    borderRadius: 8,
+  },
+}));
