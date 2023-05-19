@@ -102,7 +102,10 @@ function App() {
   const [currentEditingGroup, setCurrentEditingGroup] =
     useState<SavedGroup | null>(null);
 
-  useHotkeys([["mod+shift+C", () => setShowControls((c) => !c)]]);
+  useHotkeys([
+    ["mod+shift+C", () => setShowControls((c) => !c)],
+    ["mod+shift+L", () => setMessages([])],
+  ]);
 
   const addMessage = (message: string) => {
     setMessages((prev) => [...prev, { role: "user", content: message }]);
@@ -180,6 +183,10 @@ function App() {
     };
 
     setSavedGroups((prev) => [...prev, newGroup]);
+  };
+
+  const handleLayerGroupDelete = (id: string) => {
+    setSavedGroups((prev) => prev.filter((group) => group.id !== id));
   };
 
   if (!user) {
@@ -285,6 +292,16 @@ function App() {
                           {group.name}
                         </Text>
                       )}
+                      <Group spacing={0}>
+                      <Button
+                        className="load-group"
+                        variant="subtle"
+                        onClick={() => {
+                          handleLayerGroupDelete(group.id);
+                        }}
+                      >
+                        <IconTrash size={16} />
+                      </Button>
                       <Button
                         className="load-group"
                         variant="subtle"
@@ -294,6 +311,7 @@ function App() {
                       >
                         <IconArrowRight size={16} />
                       </Button>
+                      </Group>
                     </Group>
                   </Box>
                 ))}
