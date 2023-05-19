@@ -8,6 +8,7 @@ import {
   Box,
   Button,
   Center,
+  Checkbox,
   Divider,
   Flex,
   Group,
@@ -70,6 +71,10 @@ function App() {
   const { loginWithRedirect, isLoading, logout, user, error } = useAuth0();
   const [currentMessage, setCurrentMessage] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [isIsolated, setIsIsolated] = useLocalStorage<boolean>({
+    key: "isIsolated",
+    defaultValue: true,
+  });
   const [messages, setMessages] = useLocalStorage<
     CreateChatCompletionRequest["messages"]
   >({
@@ -151,17 +156,18 @@ function App() {
 
   const handleSubmission = async () => {
     setCurrentMessage("");
-    addMessage(currentMessage);
     const newPrompt = buildPrompt(currentMessage);
 
     const newMessage = {
       role: "user" as CreateChatCompletionRequest["messages"][0]["role"],
       content: newPrompt,
     };
-    const newMessages: CreateChatCompletionRequest["messages"] = [
-      ...messages,
-      newMessage,
-    ];
+
+    addMessage(currentMessage);
+
+    const newMessages: CreateChatCompletionRequest["messages"] = isIsolated
+      ? [newMessage]
+      : [...messages, newMessage];
 
     await sendChat(newMessages);
   };
@@ -347,6 +353,7 @@ function App() {
             />
             <NumberInput
               label="Temperature"
+              description="The higher the temperature, the more variation in the results."
               stepHoldDelay={500}
               stepHoldInterval={100}
               precision={1}
@@ -364,6 +371,13 @@ function App() {
                   <IconFlame size={16} color="red" />
                 )
               }
+            />
+            <Checkbox
+              label="Isolated responses"
+              description="If enabled, each response will be generated independent of the previous ones."
+              size={"sm"}
+              checked={isIsolated}
+              onChange={(event) => setIsIsolated(event.currentTarget.checked)}
             />
             <Button
               variant="outline"
