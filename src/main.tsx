@@ -10,6 +10,23 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { Notifications } from "@mantine/notifications";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import AIImage from "./Image.tsx";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+    errorElement: <div>Oops, error occured while loading Layers GPT</div>,
+  },
+  {
+    path: "/image",
+    element: <AIImage />,
+    errorElement: (
+      <div>Oops, error occured while loading AI Image Playground</div>
+    ),
+  },
+]);
 
 const Root: React.FC = () => {
   const preferredColorScheme = useColorScheme();
@@ -31,8 +48,8 @@ const Root: React.FC = () => {
         withGlobalStyles
         withNormalizeCSS
       >
-        <Notifications position="bottom-center"/>
-        <App />
+        <Notifications position="bottom-center" />
+        <RouterProvider router={router} />
       </MantineProvider>
     </ColorSchemeProvider>
   );
