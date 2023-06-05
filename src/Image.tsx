@@ -301,7 +301,7 @@ const AIImage = () => {
           />
           {loading ? (
             <SimpleGrid cols={2} w={620}>
-              {getSkeletonArray(config.variations).map((img, index) => (
+              {getSkeletonArray(config.variations).map((img) => (
                 <Skeleton key={img} width={300} height={300} radius={"sm"} />
               ))}
             </SimpleGrid>
