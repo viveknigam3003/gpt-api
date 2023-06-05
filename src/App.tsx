@@ -253,7 +253,7 @@ function App() {
             align={"center"}
             justify={"space-between"}
           >
-            <Stack w={"100%"}>
+            <Stack w={"100%"} className={classes.navList}>
               <Group spacing={4}>
                 <IconPackages size={16} />
                 <Title order={4}>Layer groups</Title>
@@ -614,4 +614,8 @@ const useStyles = createStyles({
     padding: 8,
     borderRadius: 8,
   },
+  navList: {
+    overflowY: "scroll",
+    height: "85vh",
+  }
 });

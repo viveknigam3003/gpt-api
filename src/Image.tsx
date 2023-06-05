@@ -178,7 +178,7 @@ const AIImage = () => {
             align={"center"}
             justify={"space-between"}
           >
-            <Stack w={"100%"} spacing={8}>
+            <Stack w={"100%"} spacing={8} className={classes.navList}>
               <Group spacing={4} pb={8}>
                 <IconHistory size={16} />
                 <Title order={4}>History</Title>
@@ -386,4 +386,8 @@ const useStyles = createStyles((theme) => ({
     overflow: "hidden",
     whiteSpace: "nowrap",
   },
+  navList: {
+    overflowY: "scroll",
+    height: "85vh",
+  }
 }));
