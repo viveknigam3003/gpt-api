@@ -46,6 +46,7 @@ import {
 import { CreateChatCompletionRequest } from "openai";
 import { useState } from "react";
 import { openai } from "./modules/openai";
+import { Link } from "react-router-dom";
 
 interface PromptLayer {
   id: string;
@@ -293,58 +294,63 @@ function App() {
                         </Text>
                       )}
                       <Group spacing={0}>
-                      <Button
-                        className="load-group"
-                        variant="subtle"
-                        onClick={() => {
-                          handleLayerGroupDelete(group.id);
-                        }}
-                      >
-                        <IconTrash size={16} />
-                      </Button>
-                      <Button
-                        className="load-group"
-                        variant="subtle"
-                        onClick={() => {
-                          setPromptLayers(group.layers);
-                        }}
-                      >
-                        <IconArrowRight size={16} />
-                      </Button>
+                        <Button
+                          className="load-group"
+                          variant="subtle"
+                          onClick={() => {
+                            handleLayerGroupDelete(group.id);
+                          }}
+                        >
+                          <IconTrash size={16} />
+                        </Button>
+                        <Button
+                          className="load-group"
+                          variant="subtle"
+                          onClick={() => {
+                            setPromptLayers(group.layers);
+                          }}
+                        >
+                          <IconArrowRight size={16} />
+                        </Button>
                       </Group>
                     </Group>
                   </Box>
                 ))}
               </Stack>
             </Stack>
-            <Stack w={"100%"} spacing={4}>
-              <Button
-                fullWidth
-                variant="subtle"
-                onClick={() => toggleColorScheme()}
-                title="Toggle color scheme"
-                leftIcon={
-                  dark ? (
+            <Stack w={"100%"}>
+              <Link to="/image">
+                <Button variant="outline" size="xs">
+                  Try Image Playground
+                </Button>
+              </Link>
+
+              <Group w={"100%"} spacing={4} align="center" position="apart">
+                {user ? (
+                  <Button variant="subtle" onClick={() => logout()}>
+                    <Group w="100%">
+                      <Avatar src={user?.picture} radius={"md"} size={"sm"} />
+                      <Text>Logout</Text>
+                    </Group>
+                  </Button>
+                ) : (
+                  <Button variant="white" onClick={() => loginWithRedirect()}>
+                    Login with Auth0
+                  </Button>
+                )}
+                <ActionIcon
+                  variant="subtle"
+                  onClick={() => toggleColorScheme()}
+                  title="Toggle color scheme"
+                  color="violet"
+                >
+                  {dark ? (
                     <IconSun size="1.1rem" />
                   ) : (
                     <IconMoonStars size="1.1rem" />
-                  )
-                }
-              >
-                Switch theme to {dark ? "light" : "dark"}
-              </Button>
-              {user ? (
-                <Button variant="subtle" onClick={() => logout()}>
-                  <Group w="100%">
-                    <Avatar src={user?.picture} radius={"md"} size={"sm"} />
-                    <Text>Logout</Text>
-                  </Group>
-                </Button>
-              ) : (
-                <Button variant="white" onClick={() => loginWithRedirect()}>
-                  Login with Auth0
-                </Button>
-              )}
+                  )}
+                </ActionIcon>
+              </Group>
             </Stack>
           </Flex>
         </Navbar>

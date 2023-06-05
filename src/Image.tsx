@@ -37,6 +37,7 @@ import {
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { openai } from "./modules/openai";
+import { Link } from "react-router-dom";
 
 interface ResponseHistory {
   id: string;
@@ -206,36 +207,39 @@ const AIImage = () => {
                 </Tooltip>
               ))}
             </Stack>
-            <Stack w={'100%'}>
+            <Stack w={"100%"}>
+              <Link to="/">
                 <Button variant="outline" size="xs">
-                    Try Layers GPT
+                  Try Layers GPT
                 </Button>
-            <Group w={"100%"} spacing={4} align="center" position="apart">
-              {user ? (
-                <Button variant="subtle" onClick={() => logout()}>
-                  <Group w="100%">
-                    <Avatar src={user?.picture} radius={"md"} size={"sm"} />
-                    <Text>Logout</Text>
-                  </Group>
-                </Button>
-              ) : (
-                <Button variant="white" onClick={() => loginWithRedirect()}>
-                  Login with Auth0
-                </Button>
-              )}
-              <ActionIcon
-                variant="subtle"
-                onClick={() => toggleColorScheme()}
-                title="Toggle color scheme"
-                color="violet"
-              >
-                {dark ? (
-                  <IconSun size="1.1rem" />
+              </Link>
+
+              <Group w={"100%"} spacing={4} align="center" position="apart">
+                {user ? (
+                  <Button variant="subtle" onClick={() => logout()}>
+                    <Group w="100%">
+                      <Avatar src={user?.picture} radius={"md"} size={"sm"} />
+                      <Text>Logout</Text>
+                    </Group>
+                  </Button>
                 ) : (
-                  <IconMoonStars size="1.1rem" />
+                  <Button variant="white" onClick={() => loginWithRedirect()}>
+                    Login with Auth0
+                  </Button>
                 )}
-              </ActionIcon>
-            </Group>
+                <ActionIcon
+                  variant="subtle"
+                  onClick={() => toggleColorScheme()}
+                  title="Toggle color scheme"
+                  color="violet"
+                >
+                  {dark ? (
+                    <IconSun size="1.1rem" />
+                  ) : (
+                    <IconMoonStars size="1.1rem" />
+                  )}
+                </ActionIcon>
+              </Group>
             </Stack>
           </Flex>
         </Navbar>
