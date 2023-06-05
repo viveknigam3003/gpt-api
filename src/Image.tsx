@@ -387,7 +387,7 @@ const useStyles = createStyles((theme) => ({
     whiteSpace: "nowrap",
   },
   navList: {
-    overflowY: "scroll",
-    height: "85vh",
+    // overflowY: "scroll",
+    // height: "85vh",
   }
 }));

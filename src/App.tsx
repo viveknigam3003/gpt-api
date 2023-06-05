@@ -44,9 +44,10 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { CreateChatCompletionRequest } from "openai";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { openai } from "./modules/openai";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 interface PromptLayer {
   id: string;
@@ -72,10 +73,27 @@ function App() {
   const { loginWithRedirect, isLoading, logout, user, error } = useAuth0();
   const [currentMessage, setCurrentMessage] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
+
+  const [exchangeRateUsdToInr, setExchangeRateUsdToInr] = useLocalStorage<{
+    value: number;
+    lastUpdated: number;
+  }>({
+    key: "exchangeRateUsdToInr",
+    defaultValue: {
+      value: 0,
+      lastUpdated: 0,
+    },
+  });
+
   const [isIsolated, setIsIsolated] = useLocalStorage<boolean>({
     key: "isIsolated",
     defaultValue: true,
   });
+  const [showCostForLastRequest, setShowCostForLastRequest] =
+    useLocalStorage<boolean>({
+      key: "showCostForLastRequest",
+      defaultValue: false,
+    });
   const [messages, setMessages] = useLocalStorage<
     CreateChatCompletionRequest["messages"]
   >({
@@ -108,8 +126,51 @@ function App() {
     ["mod+shift+L", () => setMessages([])],
   ]);
 
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      // fetch exchange rate every day using api with axios and update the local storage
+      const response = await axios.get(
+        "https://api.exchangerate.host/latest?base=USD&symbols=INR"
+      );
+      const exchangeRate = response.data.rates.INR;
+      setExchangeRateUsdToInr({
+        value: exchangeRate,
+        lastUpdated: new Date().getTime(),
+      });
+    };
+
+    const lastUpdated = exchangeRateUsdToInr?.lastUpdated;
+
+    if (!lastUpdated) {
+      console.log("Fetching exchange rate for the first time");
+      fetchExchangeRate();
+      return;
+    }
+
+    const now = new Date().getTime();
+    const diff = now - lastUpdated;
+    const diffInDays = diff / (1000 * 3600 * 24);
+    if (diffInDays > 1) {
+      fetchExchangeRate();
+    }
+  }, []);
+
   const addMessage = (message: string) => {
     setMessages((prev) => [...prev, { role: "user", content: message }]);
+  };
+
+  const calculateCostForTokens = (
+    tokens: number,
+    model: CreateChatCompletionRequest["model"]
+  ) => {
+    if (model === "gpt-3.5-turbo") {
+      // USD to INR
+      return (0.002 / 1000) * tokens * exchangeRateUsdToInr.value;
+    }
+    if (model === "gpt-4") {
+      return (0.006 / 1000) * tokens * exchangeRateUsdToInr.value;
+    }
+    return 0;
   };
 
   const sendChat = async (
@@ -133,6 +194,19 @@ function App() {
 
       if (newMessage.content) {
         setMessages((prev) => [...prev, newMessage]);
+      }
+
+      if (showCostForLastRequest) {
+        const totalCost = calculateCostForTokens(
+          Number(response.data.usage?.total_tokens),
+          config.model
+        );
+        notifications.show({
+          title: `Cost for last request = ₹${totalCost.toFixed(4)}`,
+          message: `Tokens used: ${response.data.usage?.total_tokens}`,
+          color: "cyan",
+          autoClose: 5000,
+        });
       }
     } catch (error: any) {
       notifications.show({
@@ -403,6 +477,15 @@ function App() {
               checked={isIsolated}
               onChange={(event) => setIsIsolated(event.currentTarget.checked)}
             />
+            <Checkbox
+              label="Show cost for last request"
+              description="If enabled, cost for each request will be shown as a notification."
+              size={"sm"}
+              checked={showCostForLastRequest}
+              onChange={(event) =>
+                setShowCostForLastRequest(event.currentTarget.checked)
+              }
+            />
             <Button
               variant="outline"
               onClick={() => {
@@ -607,7 +690,7 @@ const useStyles = createStyles({
   chats: {
     paddingTop: 16,
     paddingBottom: 16,
-    overflowY: "scroll",
+    overflowY: "auto",
     height: "90vh",
   },
   savedGroup: {
@@ -615,7 +698,7 @@ const useStyles = createStyles({
     borderRadius: 8,
   },
   navList: {
-    overflowY: "scroll",
-    height: "85vh",
-  }
+    // overflowY: "scroll",
+    // height: "85vh",
+  },
 });

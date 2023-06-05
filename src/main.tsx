@@ -48,7 +48,7 @@ const Root: React.FC = () => {
         withGlobalStyles
         withNormalizeCSS
       >
-        <Notifications position="bottom-center" />
+        <Notifications position="top-center" />
         <RouterProvider router={router} />
       </MantineProvider>
     </ColorSchemeProvider>
